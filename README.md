@@ -4,7 +4,7 @@ A GitHub Actions setup that pings several services, **each on its own schedule**
 
 ## How it works
 
-- `.github/workflows/ping.yml` runs every 5 minutes, which is GitHub's minimum.
+- `.github/workflows/ping.yml` runs every 10 minutes (GitHub allows down to 5) to keep the number of Actions runs low.
 - On each run, `scripts/ping.py` checks every service in `services.json` and pings only the ones that are due by their own `every` or `at` setting.
 - The time of each service's last ping is saved between runs in the Actions cache, so the schedules hold up even when GitHub starts runs late.
 - The results table appears on each run's summary page. If a ping fails, the run fails, which triggers GitHub's failure email.
@@ -25,7 +25,7 @@ Edit `services.json`. Each entry needs a `url` and **one** schedule type:
 
 | Field | Example | Meaning |
 |---|---|---|
-| `every` | `"5m"`, `"30m"`, `"2h"`, `"1d"` | Repeating interval. The minimum is `5m`. The default is `10m`. |
+| `every` | `"10m"`, `"30m"`, `"2h"`, `"1d"` | Repeating interval. The minimum is `10m` (the workflow tick). The default is `10m`. |
 | `at` | `"09:00"` or `["08:00","20:00"]` | Fixed time(s) each day (24-hour clock) |
 | `timezone` | `"Asia/Manila"` | Time zone for `at`. The default is `UTC`. |
 

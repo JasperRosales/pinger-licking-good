@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Ping services from a JSON config, each on its own schedule.
 
-The workflow runs this every 5 minutes. On each run, a service is pinged only
+The workflow runs this every 10 minutes. On each run, a service is pinged only
 if it is due according to its own `every` or `at` setting. The last ping time
 of each service is kept in a state file, which the workflow saves between runs
 with actions/cache.
@@ -21,7 +21,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-TICK = timedelta(minutes=5)       # how often the workflow cron fires
+TICK = timedelta(minutes=10)      # how often the workflow cron fires
 GRACE = timedelta(minutes=2)      # slack for cron jitter on interval schedules
 AT_WINDOW = timedelta(minutes=60) # "at" slots missed by more than this are skipped
 UNITS = {"m": "minutes", "h": "hours", "d": "days"}
@@ -34,7 +34,7 @@ def parse_interval(text):
         raise ValueError(f"bad interval {text!r} (use e.g. '5m', '2h', '1d')")
     delta = timedelta(**{UNITS[m.group(2)]: int(m.group(1))})
     if delta < TICK:
-        raise ValueError(f"interval {text!r} is shorter than the 5m minimum")
+        raise ValueError(f"interval {text!r} is shorter than the 10m minimum")
     return delta
 
 
