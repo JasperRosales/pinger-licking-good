@@ -1,13 +1,19 @@
 [
   {
-    "name": "Example",
+    "name": "Example (every 10 min)",
     "url": "https://example.com",
-    "method": "GET",
+    "every": "10m"
+  },
+  {
+    "name": "GitHub API (hourly)",
+    "url": "https://api.github.com",
+    "every": "1h",
     "expected_status": 200
   },
   {
-    "name": "GitHub API",
-    "url": "https://api.github.com",
-    "expected_status": 200
+    "name": "Example (daily at set times, Manila)",
+    "url": "https://example.com",
+    "at": ["08:00", "20:00"],
+    "timezone": "Asia/Manila"
   }
 ]

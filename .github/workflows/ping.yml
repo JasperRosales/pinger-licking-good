@@ -2,14 +2,24 @@ name: Ping services
 
 on:
   schedule:
-    # Every 10 minutes (GitHub's minimum is 5; scheduled runs may be delayed under load)
-    - cron: "*/10 * * * *"
+    # Base tick: every 5 minutes (GitHub's minimum). Each service decides
+    # whether it is due using its own "every" / "at" setting in services.json.
+    - cron: "*/5 * * * *"
   workflow_dispatch:
+    inputs:
+      force:
+        description: "Ping all services now, ignoring their schedules"
+        type: boolean
+        default: true
+      only:
+        description: "Ping only this service (by name). Leave empty for all."
+        type: string
+        default: ""
   push:
     branches: [main]
     paths:
       - services.json
-      - scripts/ping.sh
+      - scripts/ping.py
       - .github/workflows/ping.yml
 
 concurrency:
@@ -18,16 +28,37 @@ concurrency:
 
 permissions:
   contents: read
+  actions: write   # needed to save the schedule state cache
 
 jobs:
   ping:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
-      - name: Ping services
+      - name: Restore last-ping state
+        uses: actions/cache/restore@v4
+        with:
+          path: .ping-state
+          key: ping-state-${{ github.run_id }}
+          restore-keys: ping-state-
+
+      - name: Ping due services
         env:
           # Optional: set a repo secret SERVICES_JSON to keep URLs private
           SERVICES_JSON: ${{ secrets.SERVICES_JSON }}
-        run: bash scripts/ping.sh services.json
+          FORCE: ${{ github.event_name == 'workflow_dispatch' && inputs.force }}
+          ONLY: ${{ inputs.only }}
+        run: |
+          args=(services.json --state .ping-state/state.json)
+          [[ "$FORCE" == "true" ]] && args+=(--force)
+          [[ -n "$ONLY" ]] && args+=(--only "$ONLY")
+          python3 scripts/ping.py "${args[@]}"
+
+      - name: Save last-ping state
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .ping-state
+          key: ping-state-${{ github.run_id }}
