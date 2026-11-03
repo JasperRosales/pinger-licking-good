@@ -1,0 +1,33 @@
+name: Ping services
+
+on:
+  schedule:
+    # Every 10 minutes (GitHub's minimum is 5; scheduled runs may be delayed under load)
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - services.json
+      - scripts/ping.sh
+      - .github/workflows/ping.yml
+
+concurrency:
+  group: ping
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ping services
+        env:
+          # Optional: set a repo secret SERVICES_JSON to keep URLs private
+          SERVICES_JSON: ${{ secrets.SERVICES_JSON }}
+        run: bash scripts/ping.sh services.json
